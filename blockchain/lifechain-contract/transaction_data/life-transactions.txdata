@@ -1,0 +1,44 @@
+[
+    {
+        "transactionName": "lifeExists",
+        "transactionLabel": "A test lifeExists transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "createLife",
+        "transactionLabel": "A test createLife transaction",
+        "arguments": [
+            "001",
+            "some value"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "readLife",
+        "transactionLabel": "A test readLife transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "updateLife",
+        "transactionLabel": "A test updateLife transaction",
+        "arguments": [
+            "001",
+            "some other value"
+        ],
+        "transientData": {}
+    },
+    {
+        "transactionName": "deleteLife",
+        "transactionLabel": "A test deleteLife transaction",
+        "arguments": [
+            "001"
+        ],
+        "transientData": {}
+    }
+]
