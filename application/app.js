@@ -82,11 +82,11 @@ async function main() {
 		const wallet = await buildWallet(Wallets, walletPath);
 
 		// in a real application this would be done on an administrative flow, and only once
-		await enrollAdmin(caClient, wallet, mspOrg1);
+		// await enrollAdmin(caClient, wallet, mspOrg1);
 
 		// in a real application this would be done only when a new user was required to be added
 		// and would be part of an administrative flow
-		await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org1.department1');
+		// await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org1.department1');
 
 		// Create a new gateway instance for interacting with the fabric network.
 		// In a real application this would be done as the backend server session is setup for
@@ -115,7 +115,7 @@ async function main() {
 			// deployed the first time. Any updates to the chaincode deployed later would likely not need to run
 			// an "init" type function.
 			console.log('\n--> Submit Transaction: InitLedger, function creates the initial set of assets on the ledger');
-			await contract.submitTransaction('InitLedger');
+			await contract.submitTransaction('readLife', '123');
 			console.log('*** Result: committed');
 
 			// Let's try a query type operation (function).
