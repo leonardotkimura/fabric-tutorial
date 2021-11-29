@@ -1,0 +1,11 @@
+extends ../layout
+
+block content
+  h1 Criar uma Pessoa 
+  form(action='/life/new', method='POST')
+    p
+      | Nome: 
+      input(type='text', name='title', value='')
+      |          Idade: 
+      input(type='text', name='year', value='')
+    input(type='submit', value='Criar')

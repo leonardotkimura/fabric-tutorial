@@ -1,0 +1,9 @@
+extends ../layout
+
+block content
+  h1 Pessoas Cadastradas
+
+  each life in lifes 
+    p Nome:  #{life.name}
+    p Idade: #{life.age}
+    hr
