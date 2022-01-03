@@ -21,6 +21,7 @@ class LifeContract extends Contract {
         const asset = { value };
         const buffer = Buffer.from(JSON.stringify(asset));
         await ctx.stub.putState(lifeId, buffer);
+        return asset
     }
 
     async readLife(ctx, lifeId) {
