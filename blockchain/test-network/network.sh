@@ -53,8 +53,8 @@ function checkPrereqs() {
   fi
   # use the fabric tools container to see if the samples and binaries match your
   # docker images
-  LOCAL_VERSION=$(peer version | sed -ne 's/^ Version: //p')
-  DOCKER_IMAGE_VERSION=$(docker run --rm hyperledger/fabric-tools:latest peer version | sed -ne 's/^ Version: //p')
+  LOCAL_VERSION=$(peer version | sed -ne 's/ Version: //p')
+  DOCKER_IMAGE_VERSION=$(docker run --rm hyperledger/fabric-tools:2.3.2 peer version | sed -ne 's/ Version: //p' | head -1)
 
   infoln "LOCAL_VERSION=$LOCAL_VERSION"
   infoln "DOCKER_IMAGE_VERSION=$DOCKER_IMAGE_VERSION"
@@ -174,7 +174,7 @@ function createOrgs() {
 
     . organizations/fabric-ca/registerEnroll.sh
 
-    while :
+  while :
     do
       if [ ! -f "organizations/fabric-ca/org1/tls-cert.pem" ]; then
         sleep 1
@@ -241,7 +241,7 @@ function networkUp() {
     COMPOSE_FILES="${COMPOSE_FILES} -f ${COMPOSE_FILE_COUCH}"
   fi
 
-  DOCKER_SOCK="${DOCKER_SOCK}" docker-compose ${COMPOSE_FILES} up -d 2>&1
+  docker-compose ${COMPOSE_FILES} up -d 2>&1
 
   docker ps -a
   if [ $? -ne 0 ]; then
@@ -274,30 +274,19 @@ function deployCC() {
   fi
 }
 
-## Call the script to deploy a chaincode to the channel
-function deployCCAAS() {
-  scripts/deployCCAAS.sh $CHANNEL_NAME $CC_NAME $CC_SRC_PATH $CCAAS_DOCKER_RUN $CC_VERSION $CC_SEQUENCE $CC_INIT_FCN $CC_END_POLICY $CC_COLL_CONFIG $CLI_DELAY $MAX_RETRY $VERBOSE $CCAAS_DOCKER_RUN
-
-  if [ $? -ne 0 ]; then
-    fatalln "Deploying chaincode-as-a-service failed"
-  fi
-}
 
 # Tear down running network
 function networkDown() {
   # stop org3 containers also in addition to org1 and org2, in case we were running sample to add org3
-  DOCKER_SOCK=$DOCKER_SOCK docker-compose -f $COMPOSE_FILE_BASE -f $COMPOSE_FILE_COUCH -f $COMPOSE_FILE_CA down --volumes --remove-orphans
+  docker-compose -f $COMPOSE_FILE_BASE -f $COMPOSE_FILE_COUCH -f $COMPOSE_FILE_CA down --volumes --remove-orphans
   docker-compose -f $COMPOSE_FILE_COUCH_ORG3 -f $COMPOSE_FILE_ORG3 down --volumes --remove-orphans
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
     # Bring down the network, deleting the volumes
-    docker volume rm docker_orderer.example.com docker_peer0.org1.example.com docker_peer0.org2.example.com
     #Cleanup the chaincode containers
     clearContainers
     #Cleanup images
     removeUnwantedImages
-    #
-    docker kill $(docker ps -q --filter name=ccaas) || true
     # remove orderer block and other channel configuration transactions and certs
     docker run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf system-genesis-block/*.block organizations/peerOrganizations organizations/ordererOrganizations'
     ## remove fabric ca artifacts
@@ -342,18 +331,12 @@ COMPOSE_FILE_ORG3=addOrg3/docker/docker-compose-org3.yaml
 #
 # chaincode language defaults to "NA"
 CC_SRC_LANGUAGE="NA"
-# default to running the docker commands for the CCAAS
-CCAAS_DOCKER_RUN=true
 # Chaincode version
 CC_VERSION="1.0"
 # Chaincode definition sequence
 CC_SEQUENCE=1
 # default database
 DATABASE="leveldb"
-
-# Get docker sock path from environment variable
-SOCK="${DOCKER_HOST:-/var/run/docker.sock}"
-DOCKER_SOCK="${SOCK##unix://}"
 
 # Parse commandline args
 
@@ -435,10 +418,6 @@ while [[ $# -ge 1 ]] ; do
     CC_INIT_FCN="$2"
     shift
     ;;
-  -ccaasdocker )
-    CCAAS_DOCKER_RUN="$2"
-    shift
-    ;;
   -verbose )
     VERBOSE=true
     shift
@@ -462,26 +441,29 @@ fi
 # Determine mode of operation and printing out what we asked for
 if [ "$MODE" == "up" ]; then
   infoln "Starting nodes with CLI timeout of '${MAX_RETRY}' tries and CLI delay of '${CLI_DELAY}' seconds and using database '${DATABASE}' ${CRYPTO_MODE}"
-  networkUp
 elif [ "$MODE" == "createChannel" ]; then
   infoln "Creating channel '${CHANNEL_NAME}'."
   infoln "If network is not up, starting nodes with CLI timeout of '${MAX_RETRY}' tries and CLI delay of '${CLI_DELAY}' seconds and using database '${DATABASE} ${CRYPTO_MODE}"
-  createChannel
 elif [ "$MODE" == "down" ]; then
   infoln "Stopping network"
-  networkDown
 elif [ "$MODE" == "restart" ]; then
   infoln "Restarting network"
-  networkDown
-  networkUp
 elif [ "$MODE" == "deployCC" ]; then
   infoln "deploying chaincode on channel '${CHANNEL_NAME}'"
-  deployCC
-elif [ "$MODE" == "deployCCAAS" ]; then
-  infoln "deploying chaincode-as-a-service on channel '${CHANNEL_NAME}'"
-  deployCCAAS
 else
   printHelp
   exit 1
 fi
 
+if [ "${MODE}" == "up" ]; then
+  networkUp
+elif [ "${MODE}" == "createChannel" ]; then
+  createChannel
+elif [ "${MODE}" == "deployCC" ]; then
+  deployCC
+elif [ "${MODE}" == "down" ]; then
+  networkDown
+else
+  printHelp
+  exit 1
+fi

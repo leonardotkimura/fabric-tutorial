@@ -119,9 +119,9 @@ function generateOrg3Definition() {
 function Org3Up () {
   # start org3 nodes
   if [ "${DATABASE}" == "couchdb" ]; then
-    DOCKER_SOCK=${DOCKER_SOCK} docker-compose -f $COMPOSE_FILE_ORG3 -f $COMPOSE_FILE_COUCH_ORG3 up -d 2>&1
+    docker-compose -f $COMPOSE_FILE_ORG3 -f $COMPOSE_FILE_COUCH_ORG3 up -d 2>&1
   else
-    DOCKER_SOCK=${DOCKER_SOCK} docker-compose -f $COMPOSE_FILE_ORG3 up -d 2>&1
+    docker-compose -f $COMPOSE_FILE_ORG3 up -d 2>&1
   fi
   if [ $? -ne 0 ]; then
     fatalln "ERROR !!!! Unable to start Org3 network"
@@ -182,10 +182,6 @@ COMPOSE_FILE_ORG3=docker/docker-compose-org3.yaml
 COMPOSE_FILE_CA_ORG3=docker/docker-compose-ca-org3.yaml
 # database
 DATABASE="leveldb"
-
-# Get docker sock path from environment variable
-SOCK="${DOCKER_HOST:-/var/run/docker.sock}"
-DOCKER_SOCK="${SOCK##unix://}"
 
 # Parse commandline args
 
